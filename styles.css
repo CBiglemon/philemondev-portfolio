@@ -285,14 +285,14 @@ nav.hidden {
   }
 }
 
-/* Enhanced Hero Section */
+/* FIXED Enhanced Hero Section - Navigation Overlap Fix */
 .hero {
-  min-height: 100vh;
+  min-height: calc(100vh - 120px); /* Account for navbar height + spacing */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2rem 3rem 0;
+  padding: 120px 3rem 2rem; /* Add top padding to push content below navbar */
   position: relative;
   overflow: hidden;
 }
@@ -1403,7 +1403,7 @@ body.keyboard-nav *:focus {
   transform: translateY(0);
 }
 
-/* MOBILE OPTIMIZATION - Reduced spacing and simplified navigation */
+/* MOBILE OPTIMIZATION - Updated with Navigation Fix */
 @media (max-width: 768px) {
   .container {
     margin-top: 3rem;
@@ -1411,7 +1411,7 @@ body.keyboard-nav *:focus {
 
   /* Simplified mobile navigation - always show all links */
   nav {
-    top: 1.5rem; /* Increased from 1rem for more breathing room */
+    top: 1.5rem;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -1420,7 +1420,7 @@ body.keyboard-nav *:focus {
   }
 
   nav.scrolled {
-    top: 1rem; /* Increased from 0.5rem */
+    top: 1rem;
     transform: translateX(-50%) scale(0.98);
   }
 
@@ -1472,32 +1472,32 @@ body.keyboard-nav *:focus {
     display: none;
   }
 
-  /* REDUCED SPACING - Hero section */
+  /* FIXED MOBILE HERO - Updated padding for navigation fix */
   .hero {
-    padding: 1rem 1.5rem 0;
-    min-height: 85vh; /* Reduced from 100vh */
+    min-height: calc(100vh - 100px);
+    padding: 100px 1.5rem 0;
   }
 
   .hero-badge {
     font-size: 0.75rem;
     padding: 0.4rem 0.8rem;
-    margin-bottom: 1.5rem; /* Reduced from 2rem */
+    margin-bottom: 1.5rem;
   }
 
   .hero h1 {
     font-size: clamp(2rem, 8vw, 3.5rem);
-    margin-bottom: 1rem; /* Reduced from 1.5rem */
+    margin-bottom: 1rem;
   }
 
   .hero p {
-    font-size: 1rem; /* Reduced from 1.1rem */
-    margin-bottom: 2rem; /* Reduced from 3rem */
+    font-size: 1rem;
+    margin-bottom: 2rem;
   }
 
   .hero-cta {
     flex-direction: column;
     align-items: center;
-    gap: 0.8rem; /* Reduced from 1rem */
+    gap: 0.8rem;
   }
 
   .btn {
@@ -1510,7 +1510,7 @@ body.keyboard-nav *:focus {
 
   /* REDUCED SPACING - About Me section */
   .about-me {
-    padding: 3rem 1.5rem; /* Significantly reduced from 8rem 3rem */
+    padding: 3rem 1.5rem;
   }
 
   .about-intro p {
@@ -1520,7 +1520,7 @@ body.keyboard-nav *:focus {
 
   .astronaut-image img {
     width: 75px;
-    height: px;
+    height: 75px;
   }
 
   .astronaut-image {
@@ -1574,38 +1574,38 @@ body.keyboard-nav *:focus {
 
   /* REDUCED SPACING - Skills section as sub-section of About */
   .skills {
-    padding: 2rem 1.5rem 3rem; /* Much smaller top padding, flows from About Me */
+    padding: 2rem 1.5rem 3rem;
   }
 
   .section-header {
-    margin-bottom: 2.5rem; /* Reduced from 4rem */
+    margin-bottom: 2.5rem;
   }
 
   .section-title {
-    font-size: 2rem; /* Reduced from 3rem */
-    margin-bottom: 0.8rem; /* Reduced from 1rem */
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
   }
 
   .section-subtitle {
-    font-size: 1rem; /* Reduced from 1.1rem */
+    font-size: 1rem;
   }
 
   .skills-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem; /* Reduced from 2rem */
+    gap: 1.5rem;
   }
 
   .skill-card {
-    padding: 2rem; /* Reduced from 2.5rem */
+    padding: 2rem;
   }
 
   /* REDUCED SPACING - Projects section */
   .projects {
-    padding: 3rem 1.5rem; /* Significantly reduced from 8rem 3rem */
+    padding: 3rem 1.5rem;
   }
 
   .project-card {
-    padding: 2rem; /* Reduced from 3rem */
+    padding: 2rem;
   }
 
   .project-header {
@@ -1615,16 +1615,16 @@ body.keyboard-nav *:focus {
   }
 
   .project-highlights {
-    margin-bottom: 2rem; /* Reduced from 2.5rem */
+    margin-bottom: 2rem;
   }
 
   .highlight-item {
-    margin-bottom: 1rem; /* Reduced from 1.5rem */
-    padding: 0.8rem; /* Reduced from 1rem */
+    margin-bottom: 1rem;
+    padding: 0.8rem;
   }
 
   .tech-showcase {
-    margin-bottom: 2rem; /* Reduced from 2.5rem */
+    margin-bottom: 2rem;
   }
 
   .tech-category {
@@ -1635,24 +1635,24 @@ body.keyboard-nav *:focus {
 
   /* REDUCED SPACING - Contact section */
   .contact {
-    padding: 3rem 1.5rem; /* Significantly reduced from 8rem 3rem */
+    padding: 3rem 1.5rem;
   }
 
   .contact-header {
-    margin-bottom: 2.5rem; /* Reduced from 4rem */
+    margin-bottom: 2.5rem;
   }
 
   .contact-form {
-    padding: 2rem; /* Reduced from 3rem */
+    padding: 2rem;
   }
 
   .form-row {
     grid-template-columns: 1fr;
-    gap: 0.8rem; /* Reduced from 1rem */
+    gap: 0.8rem;
   }
 
   .form-group {
-    margin-bottom: 1.2rem; /* Reduced from 1.5rem */
+    margin-bottom: 1.2rem;
   }
 
   /* Modal adjustments */
@@ -1674,11 +1674,11 @@ body.keyboard-nav *:focus {
 @media (max-width: 480px) {
   nav {
     width: calc(100% - 1rem);
-    top: 1.2rem; /* Increased from 0.5rem for better spacing */
+    top: 1.2rem;
   }
 
   nav.scrolled {
-    top: 0.8rem; /* Increased from previous value */
+    top: 0.8rem;
   }
 
   .nav-content {
@@ -1695,23 +1695,24 @@ body.keyboard-nav *:focus {
     font-size: 0.75rem;
   }
 
+  /* FIXED MOBILE HERO - Updated for smaller screens */
   .hero {
-    padding: 0.5rem 1rem 0;
-    min-height: 80vh;
+    min-height: calc(100vh - 90px);
+    padding: 90px 1rem 0;
   }
 
   .about {
-    padding: 2rem 1.5rem; /* Increased padding for very small screens */
+    padding: 2rem 1.5rem;
   }
 
   .about-intro p {
-    padding: 0 0.8rem; /* Extra padding for very small screens */
+    padding: 0 0.8rem;
   }
 
   .skills,
   .projects,
   .contact {
-    padding: 2rem 1rem; /* Further reduced spacing */
+    padding: 2rem 1rem;
   }
 
   .section-title {
