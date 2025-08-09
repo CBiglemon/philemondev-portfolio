@@ -13,16 +13,36 @@ export default async function handler(req, res) {
   try {
     const { firstName, lastName, email, company, subject, message } = req.body;
 
+    // Debug: Check environment variables in production
+    console.log("Production Environment Check:", {
+      hasServiceId: !!process.env.EMAILJS_SERVICE_ID,
+      hasTemplateId: !!process.env.EMAILJS_TEMPLATE_ID,
+      hasPublicKey: !!process.env.EMAILJS_PUBLIC_KEY,
+      serviceIdLength: process.env.EMAILJS_SERVICE_ID?.length,
+      templateIdLength: process.env.EMAILJS_TEMPLATE_ID?.length,
+      publicKeyLength: process.env.EMAILJS_PUBLIC_KEY?.length,
+    });
+
     // Validate required fields
     if (!firstName || !lastName || !email || !subject || !message) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Check if environment variables are missing
+    if (
+      !process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ||
+      !process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ||
+      !process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+    ) {
+      console.error("Missing environment variables");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
     // Prepare EmailJS API request
     const emailJSData = {
-      service_id: process.env.EMAILJS_SERVICE_ID,
-      template_id: process.env.EMAILJS_TEMPLATE_ID,
-      user_id: process.env.EMAILJS_PUBLIC_KEY,
+      service_id: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+      template_id: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+      user_id: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
       template_params: {
         from_name: `${firstName} ${lastName}`,
         from_email: email,
@@ -44,8 +64,17 @@ export default async function handler(req, res) {
       }
     );
 
+    const responseText = await response.text();
+    console.log("EmailJS API Response:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: responseText,
+    });
+
     if (!response.ok) {
-      throw new Error(`EmailJS API error: ${response.status}`);
+      throw new Error(
+        `EmailJS API error: ${response.status} - ${responseText}`
+      );
     }
 
     console.log("Email sent successfully via EmailJS");
