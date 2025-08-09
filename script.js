@@ -62,8 +62,6 @@ class PortfolioApp {
     this.setupKeyboardNavigation();
     this.setupPerformanceOptimizations();
     this.setupProjectModal(); // Re-enabled for modal functionality
-
-    console.log("🚀 High-performance portfolio loaded!");
   }
 
   // ==========================================
@@ -416,10 +414,31 @@ class PortfolioApp {
     });
 
     const formData = new FormData(this.contactForm);
-    const data = Object.fromEntries(formData);
+    const data = {
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      email: formData.get("email"),
+      company: formData.get("company"),
+      subject: formData.get("subject"),
+      message: formData.get("message"),
+    };
 
     try {
-      await this.simulateFormSubmission(data);
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send email");
+      }
+
+      console.log("Email sent successfully!");
 
       requestAnimationFrame(() => {
         this.showMessage(
@@ -439,6 +458,8 @@ class PortfolioApp {
         });
       }, 3000);
     } catch (error) {
+      console.error("Failed to send email:", error);
+
       requestAnimationFrame(() => {
         this.showMessage(
           "Oops! Something went wrong. Please try again or reach out directly via email.",
