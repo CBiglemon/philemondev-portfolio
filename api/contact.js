@@ -1,11 +1,9 @@
-// api/contact.js - Clean production version
+// api/contact.js - Simplified version without problematic validation
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Add CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -13,36 +11,36 @@ export default async function handler(req, res) {
   try {
     const { firstName, lastName, email, company, subject, message } = req.body;
 
-    // Debug: Check environment variables in production
-    console.log("Production Environment Check:", {
-      hasServiceId: !!process.env.EMAILJS_SERVICE_ID,
-      hasTemplateId: !!process.env.EMAILJS_TEMPLATE_ID,
-      hasPublicKey: !!process.env.EMAILJS_PUBLIC_KEY,
-      serviceIdPrefix: process.env.EMAILJS_SERVICE_ID?.substring(0, 10),
-      templateIdPrefix: process.env.EMAILJS_TEMPLATE_ID?.substring(0, 10),
-      publicKeyPrefix: process.env.EMAILJS_PUBLIC_KEY?.substring(0, 10),
-    });
-
     // Validate required fields
     if (!firstName || !lastName || !email || !subject || !message) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if environment variables are missing
-    if (
-      !process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ||
-      !process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ||
-      !process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-    ) {
-      console.error("Missing environment variables");
+    // Use environment variables directly without trim() in case that's the issue
+    const serviceId = process.env.EMAILJS_SERVICE_ID;
+    const templateId = process.env.EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+
+    // Log without exposing the actual values
+    console.log("Environment variables status:", {
+      hasServiceId: !!serviceId,
+      hasTemplateId: !!templateId,
+      hasPublicKey: !!publicKey,
+      serviceIdLength: serviceId?.length || 0,
+      templateIdLength: templateId?.length || 0,
+      publicKeyLength: publicKey?.length || 0,
+    });
+
+    // If any are missing, fail gracefully without exposing keys
+    if (!serviceId || !templateId || !publicKey) {
+      console.error("Environment variables missing or empty");
       return res.status(500).json({ error: "Server configuration error" });
     }
 
-    // Prepare EmailJS API request
     const emailJSData = {
-      service_id: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-      template_id: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-      user_id: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: publicKey,
       template_params: {
         from_name: `${firstName} ${lastName}`,
         from_email: email,
@@ -51,6 +49,13 @@ export default async function handler(req, res) {
         message: message,
       },
     };
+
+    console.log("Sending email request to EmailJS API...", {
+      hasServiceId: !!emailJSData.service_id,
+      hasTemplateId: !!emailJSData.template_id,
+      hasUserId: !!emailJSData.user_id,
+      templateParamsKeys: Object.keys(emailJSData.template_params),
+    });
 
     // Send email via EmailJS API
     const response = await fetch(
