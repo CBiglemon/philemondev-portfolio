@@ -1,4 +1,4 @@
-// api/contact.js
+// api/contact.js - Clean production version
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== "POST") {
@@ -18,9 +18,9 @@ export default async function handler(req, res) {
       hasServiceId: !!process.env.EMAILJS_SERVICE_ID,
       hasTemplateId: !!process.env.EMAILJS_TEMPLATE_ID,
       hasPublicKey: !!process.env.EMAILJS_PUBLIC_KEY,
-      serviceIdLength: process.env.EMAILJS_SERVICE_ID?.length,
-      templateIdLength: process.env.EMAILJS_TEMPLATE_ID?.length,
-      publicKeyLength: process.env.EMAILJS_PUBLIC_KEY?.length,
+      serviceIdPrefix: process.env.EMAILJS_SERVICE_ID?.substring(0, 10),
+      templateIdPrefix: process.env.EMAILJS_TEMPLATE_ID?.substring(0, 10),
+      publicKeyPrefix: process.env.EMAILJS_PUBLIC_KEY?.substring(0, 10),
     });
 
     // Validate required fields
