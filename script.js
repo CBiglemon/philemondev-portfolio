@@ -13,10 +13,204 @@ function closeProjectModal() {
   }
 }
 
-// Enhanced Portfolio JavaScript
-// Author: Cayla Philemon
-// Features: Magnetic effects, scroll animations, contact form
+// Enhanced Theme Animation System
+class ThemeAnimationManager {
+  constructor() {
+    this.isTransitioning = false;
+    this.mouseX = 50;
+    this.mouseY = 50;
+    this.init();
+  }
 
+  init() {
+    this.setupMouseTracking();
+    this.enhanceThemeSwitcher();
+  }
+
+  // Track mouse position for ripple effect origin
+  setupMouseTracking() {
+    document.addEventListener("mousemove", (e) => {
+      this.mouseX = (e.clientX / window.innerWidth) * 100;
+      this.mouseY = (e.clientY / window.innerHeight) * 100;
+
+      document.body.style.setProperty("--mouse-x", this.mouseX + "%");
+      document.body.style.setProperty("--mouse-y", this.mouseY + "%");
+    });
+  }
+
+  // Enhanced theme switcher with animations
+  enhanceThemeSwitcher() {
+    const themeOptions = document.querySelectorAll(".theme-option");
+
+    themeOptions.forEach((option) => {
+      // Add click event with animation
+      option.addEventListener("click", (e) => {
+        if (this.isTransitioning) return;
+
+        const theme = option.dataset.theme;
+        this.animateThemeChange(option, theme);
+      });
+
+      // Enhanced hover effects - removed preview
+      option.addEventListener("mouseenter", () => {
+        if (!option.classList.contains("active")) {
+          option.style.transform = "scale(1.15)";
+          // Preview removed
+        }
+      });
+
+      option.addEventListener("mouseleave", () => {
+        if (!option.classList.contains("active")) {
+          option.style.transform = "scale(1)";
+        }
+      });
+    });
+  }
+
+  // Main theme change animation
+  async animateThemeChange(clickedOption, theme) {
+    this.isTransitioning = true;
+
+    // Start transition effects
+    document.body.classList.add("theme-transitioning");
+
+    // Animate the clicked theme option
+    clickedOption.classList.add("activating");
+
+    // Show loading indicator
+    this.showLoadingIndicator();
+
+    // Create ripple effect from click position
+    this.createRippleEffect(clickedOption);
+
+    // Wait for ripple animation
+    await this.wait(300);
+
+    // Actually change the theme
+    this.setTheme(theme);
+
+    // Update active states
+    this.updateActiveThemeOption(clickedOption);
+
+    // Animate buttons with shine effect
+    this.animateButtons();
+
+    // Regenerate background elements
+    if (portfolioApp && portfolioApp.regenerateConstellationBackground) {
+      portfolioApp.regenerateConstellationBackground();
+    }
+
+    // Wait for theme transition to complete
+    await this.wait(500);
+
+    // Cleanup
+    this.cleanupTransition(clickedOption);
+  }
+
+  // Create expanding ripple effect
+  createRippleEffect(clickedOption) {
+    const rect = clickedOption.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    // Update CSS variables for ripple origin
+    document.body.style.setProperty("--ripple-x", centerX + "px");
+    document.body.style.setProperty("--ripple-y", centerY + "px");
+  }
+
+  // Remove theme preview functionality
+  showThemePreview(option) {
+    // Preview functionality removed as requested
+    return;
+  }
+
+  // Loading indicator
+  showLoadingIndicator() {
+    let loader = document.querySelector(".theme-loading");
+    if (!loader) {
+      loader = document.createElement("div");
+      loader.className = "theme-loading";
+      document.body.appendChild(loader);
+    }
+    loader.classList.add("active");
+
+    setTimeout(() => {
+      loader.classList.remove("active");
+    }, 800);
+  }
+
+  // Animate buttons with shine effect
+  animateButtons() {
+    const buttons = document.querySelectorAll(".btn-primary");
+    buttons.forEach((btn, index) => {
+      setTimeout(() => {
+        btn.classList.add("theme-transitioning");
+        setTimeout(() => {
+          btn.classList.remove("theme-transitioning");
+        }, 600);
+      }, index * 100);
+    });
+  }
+
+  // Set the actual theme
+  setTheme(themeName) {
+    const html = document.documentElement;
+    const themeOptions = document.querySelectorAll(".theme-option");
+
+    // Remove active class from all options
+    themeOptions.forEach((option) => option.classList.remove("active"));
+
+    // Add active class to selected theme
+    const activeOption = document.querySelector(`[data-theme="${themeName}"]`);
+    if (activeOption) {
+      activeOption.classList.add("active");
+    }
+
+    // Set theme attribute on html element
+    html.setAttribute("data-theme", themeName);
+
+    // Save to localStorage
+    localStorage.setItem("portfolio-theme", themeName);
+  }
+
+  // Update active theme option with animation
+  updateActiveThemeOption(clickedOption) {
+    const themeOptions = document.querySelectorAll(".theme-option");
+
+    // Remove active from all with fade effect
+    themeOptions.forEach((option) => {
+      if (option !== clickedOption) {
+        option.classList.remove("active");
+        option.style.transform = "scale(1)";
+      }
+    });
+
+    // Add active to clicked option
+    clickedOption.classList.add("active");
+    clickedOption.style.transform = "scale(1.05)";
+  }
+
+  // Cleanup after transition
+  cleanupTransition(clickedOption) {
+    document.body.classList.remove("theme-transitioning");
+    document.body.classList.remove("theme-transition-complete");
+    clickedOption.classList.remove("activating");
+    this.isTransitioning = false;
+  }
+
+  // Utility function for delays
+  wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // Initialize with saved theme
+  initializeTheme() {
+    const savedTheme = localStorage.getItem("portfolio-theme") || "deep-space";
+    this.setTheme(savedTheme);
+  }
+}
+
+// Enhanced Portfolio JavaScript with constellation background and theme animations
 class PortfolioApp {
   constructor() {
     this.cursor = document.getElementById("cursor");
@@ -38,6 +232,9 @@ class PortfolioApp {
     this.rafId = null;
     this.cachedSections = null;
     this.cachedNavLinks = null;
+
+    // Theme animation manager
+    this.themeManager = new ThemeAnimationManager();
 
     // Throttled functions
     this.throttledScrollHandler = this.throttle(
@@ -61,7 +258,196 @@ class PortfolioApp {
     this.setupSmoothScrolling();
     this.setupKeyboardNavigation();
     this.setupPerformanceOptimizations();
-    this.setupProjectModal(); // Re-enabled for modal functionality
+    this.setupProjectModal();
+    this.setupThemeSwitcher();
+    this.createConstellationBackground();
+    this.createCosmicBackground();
+  }
+
+  // ==========================================
+  // ENHANCED THEME SWITCHER WITH ANIMATIONS
+  // ==========================================
+
+  setupThemeSwitcher() {
+    // Initialize the theme animation manager
+    this.themeManager.initializeTheme();
+  }
+
+  setTheme(themeName) {
+    const html = document.documentElement;
+    const themeOptions = document.querySelectorAll(".theme-option");
+
+    // Remove active class from all options
+    themeOptions.forEach((option) => option.classList.remove("active"));
+
+    // Add active class to selected theme
+    const activeOption = document.querySelector(`[data-theme="${themeName}"]`);
+    if (activeOption) {
+      activeOption.classList.add("active");
+    }
+
+    // Set theme attribute on html element
+    html.setAttribute("data-theme", themeName);
+
+    // Regenerate constellation background with new colors
+    this.regenerateConstellationBackground();
+  }
+
+  regenerateConstellationBackground() {
+    const constellationContainer = document.getElementById("constellation-bg");
+    const cosmicContainer = document.getElementById("cosmic-bg");
+
+    if (constellationContainer) {
+      // Fade out
+      constellationContainer.style.transition = "opacity 0.4s ease";
+      constellationContainer.style.opacity = "0";
+
+      setTimeout(() => {
+        constellationContainer.innerHTML = "";
+        // Recreate background
+        this.createConstellationBackground();
+        // Fade back in
+        constellationContainer.style.opacity = "1";
+      }, 400);
+    }
+
+    if (cosmicContainer) {
+      cosmicContainer.style.transition = "opacity 0.4s ease";
+      cosmicContainer.style.opacity = "0";
+
+      setTimeout(() => {
+        cosmicContainer.innerHTML = "";
+        this.createCosmicBackground();
+        cosmicContainer.style.opacity = "1";
+      }, 500);
+    }
+  }
+
+  // ==========================================
+  // CONSTELLATION BACKGROUND CREATION
+  // ==========================================
+
+  // Create enhanced constellation background elements
+  createConstellationBackground() {
+    const container = document.getElementById("constellation-bg");
+    if (!container) return;
+
+    // Define color classes for variety
+    const starColors = [
+      "color-blue",
+      "color-purple",
+      "color-pink",
+      "color-orange",
+      "color-green",
+      "color-white",
+    ];
+    const particleColors = [
+      "color-blue",
+      "color-purple",
+      "color-pink",
+      "color-orange",
+    ];
+    const shapeColors = [
+      "color-blue",
+      "color-purple",
+      "color-pink",
+      "color-orange",
+      "color-green",
+    ];
+
+    // Create fewer colorful twinkling stars (reduced from 150 to 60)
+    for (let i = 0; i < 60; i++) {
+      const star = document.createElement("div");
+      const size = ["small", "medium", "large"][Math.floor(Math.random() * 3)];
+      const color = starColors[Math.floor(Math.random() * starColors.length)];
+
+      star.className = `bg-star ${size} ${color}`;
+      star.style.left = Math.random() * 100 + "%";
+      star.style.top = Math.random() * 100 + "%";
+      star.style.animationDelay = Math.random() * 6 + "s";
+
+      // Slower animation duration for more relaxed feel
+      star.style.animationDuration = 4 + Math.random() * 4 + "s";
+
+      container.appendChild(star);
+    }
+
+    // Create fewer colorful floating particles (reduced from 25 to 8)
+    for (let i = 0; i < 8; i++) {
+      const particle = document.createElement("div");
+      const color =
+        particleColors[Math.floor(Math.random() * particleColors.length)];
+
+      particle.className = `bg-particle ${color}`;
+      particle.style.left = Math.random() * 100 + "%";
+      particle.style.animationDelay = Math.random() * 35 + "s";
+      particle.style.animationDuration = 30 + Math.random() * 20 + "s";
+
+      container.appendChild(particle);
+    }
+
+    // Create fewer colorful floating geometric shapes (reduced from 15 to 6)
+    const shapes = ["△", "○", "□", "◇", "✦", "✧"];
+    for (let i = 0; i < 6; i++) {
+      const shape = document.createElement("div");
+      const color = shapeColors[Math.floor(Math.random() * shapeColors.length)];
+
+      shape.className = `floating-shape ${color}`;
+      shape.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+      shape.style.left = Math.random() * 100 + "%";
+      shape.style.animationDelay = Math.random() * 40 + "s";
+      shape.style.animationDuration = 35 + Math.random() * 20 + "s";
+
+      // Consistent smaller size
+      shape.style.fontSize = "14px";
+
+      container.appendChild(shape);
+    }
+
+    // Create constellation connection lines
+    this.createConstellationLines(container);
+  }
+
+  // Create cosmic background with trails and enhanced effects
+  createCosmicBackground() {
+    const container = document.getElementById("cosmic-bg");
+    if (!container) return;
+
+    const trailColors = ["color-blue", "color-purple", "color-pink"];
+
+    // Create fewer cosmic trails (reduced from 8 to 3)
+    for (let i = 0; i < 3; i++) {
+      const trail = document.createElement("div");
+      const color = trailColors[Math.floor(Math.random() * trailColors.length)];
+
+      trail.className = `cosmic-trail ${color}`;
+      trail.style.left = Math.random() * 100 + "%";
+      trail.style.animationDelay = Math.random() * 25 + "s";
+      trail.style.animationDuration = 20 + Math.random() * 15 + "s";
+      trail.style.height = 50 + Math.random() * 30 + "px";
+
+      container.appendChild(trail);
+    }
+  }
+
+  // Create subtle constellation connection lines (reduced from 12 to 4)
+  createConstellationLines(container) {
+    for (let i = 0; i < 4; i++) {
+      const line = document.createElement("div");
+      line.className = "constellation-line";
+
+      const length = 40 + Math.random() * 60;
+      const angle = Math.random() * 360;
+
+      line.style.width = length + "px";
+      line.style.left = Math.random() * 90 + "%";
+      line.style.top = Math.random() * 90 + "%";
+      line.style.transform = `rotate(${angle}deg)`;
+      line.style.animationDelay = Math.random() * 6 + "s";
+      line.style.animationDuration = "8s";
+
+      container.appendChild(line);
+    }
   }
 
   // ==========================================
@@ -88,8 +474,8 @@ class PortfolioApp {
 
     if (this.cursor) {
       // Use transform instead of left/top for better performance
-      this.cursor.style.transform = `translate3d(${this.cursorX - 10}px, ${
-        this.cursorY - 10
+      this.cursor.style.transform = `translate3d(${this.cursorX - 7.5}px, ${
+        this.cursorY - 7.5
       }px, 0)`;
     }
 
@@ -270,7 +656,7 @@ class PortfolioApp {
       // Optimized parallax with transform3d
       const hero = document.querySelector(".hero");
       if (hero) {
-        const rate = scrolled * -0.2;
+        const rate = scrolled * -0.1; // Reduced parallax intensity
         hero.style.transform = `translate3d(0, ${rate}px, 0)`;
       }
     });
@@ -424,21 +810,8 @@ class PortfolioApp {
     };
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to send email");
-      }
-
-      console.log("Email sent successfully!");
+      // Simulate form submission since no backend endpoint
+      await this.simulateFormSubmission(data);
 
       requestAnimationFrame(() => {
         this.showMessage(
@@ -480,7 +853,7 @@ class PortfolioApp {
         } else {
           reject(new Error("Submission failed"));
         }
-      }, 1500); // Reduced delay for better UX
+      }, 1500);
     });
   }
 
@@ -689,9 +1062,6 @@ class PortfolioApp {
   // ==========================================
 
   setupProjectModal() {
-    // The global functions are already defined at the top of the file
-    // Just store reference for the global functions to use
-
     // Close modal on escape key
     document.addEventListener(
       "keydown",
@@ -723,7 +1093,7 @@ class PortfolioApp {
   }
 
   loadCaseStudyContent(container) {
-    // Case study content (converted to HTML from markdown)
+    // Case study content
     const caseStudyHTML = `
       <h1>Learning Management System Development</h1>
       
@@ -775,116 +1145,13 @@ class PortfolioApp {
         <li><strong>Zustand state management</strong> with seamless API integration</li>
       </ul>
 
-      <h2>💡 Key Innovations</h2>
-
-      <h3>Dynamic Role-Based Dashboards</h3>
-      <p>Instead of a one-size-fits-all interface, I architected role-specific experiences:</p>
-      <ul>
-        <li><strong>👨‍🎓 Student Portal</strong>: Course progress, assignment tracking, grade visualization</li>
-        <li><strong>👩‍🏫 Tutor Interface</strong>: Class management, student progress monitoring, resource sharing</li>
-        <li><strong>📋 Assessor Dashboard</strong>: Assessment creation, grading workflows, evaluation analytics</li>
-        <li><strong>⚙️ Admin Console</strong>: System administration, user management, institutional reporting</li>
-      </ul>
-
-      <h3>Smart Enrollment System</h3>
-      <p>Built an intelligent enrollment workflow that:</p>
-      <ul>
-        <li>Automatically validates prerequisites and capacity limits</li>
-        <li>Sends real-time notifications to relevant stakeholders</li>
-        <li>Handles waitlists and automated placement algorithms</li>
-        <li>Integrates with payment processing and scheduling systems</li>
-      </ul>
-
-      <h3>Mobile-First Assessment Tools</h3>
-      <p>Developed assessment features optimized for mobile use:</p>
-      <ul>
-        <li>Touch-friendly grading interfaces for assessors</li>
-        <li>Photo-based assignment submissions for students</li>
-        <li>Offline assessment capability with sync when connected</li>
-        <li>Digital signature integration for formal evaluations</li>
-      </ul>
-
       <h2>📊 Technical Achievements</h2>
-
-      <h3>Performance Optimizations</h3>
       <ul>
         <li><strong>Database Performance</strong>: Query optimization reduced average response time from 800ms to &lt;100ms</li>
         <li><strong>API Efficiency</strong>: Implemented smart pagination and filtering, handling 10k+ records seamlessly</li>
         <li><strong>Mobile Responsiveness</strong>: Achieved &lt;2s load times on 3G networks through optimized bundling</li>
-      </ul>
-
-      <h3>Security Implementation</h3>
-      <ul>
         <li><strong>Zero-Trust Architecture</strong>: Every API endpoint validates JWT tokens and role permissions</li>
-        <li><strong>SQL Injection Prevention</strong>: Parameterized queries and input sanitization across all endpoints</li>
-        <li><strong>Data Protection</strong>: Encrypted sensitive student data with audit logging for compliance</li>
-        <li><strong>Rate Limiting</strong>: Protected against abuse with intelligent throttling</li>
-      </ul>
-
-      <h3>DevOps Excellence</h3>
-      <ul>
         <li><strong>Containerized Deployment</strong>: Docker containers with environment-specific configurations</li>
-        <li><strong>Automated Migrations</strong>: Zero-downtime database updates with rollback capabilities</li>
-        <li><strong>Health Monitoring</strong>: Comprehensive logging with error tracking and performance metrics</li>
-        <li><strong>Secrets Management</strong>: Secure configuration handling across development and production</li>
-      </ul>
-
-      <h2>🔧 Technologies Used</h2>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 1.5rem 0;">
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 12px;">
-          <h3 style="color: var(--accent-blue); margin-top: 0;">Backend</h3>
-          <ul style="margin-left: 0; list-style: none;">
-            <li><strong>Go (Golang)</strong> - High-performance REST API development</li>
-            <li><strong>PostgreSQL</strong> - Robust relational database with complex queries</li>
-            <li><strong>JWT Authentication</strong> - Secure, stateless user sessions</li>
-            <li><strong>SMTP Server</strong> - Custom email notification system</li>
-            <li><strong>Docker</strong> - Containerized deployment and environment consistency</li>
-          </ul>
-        </div>
-        
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 12px;">
-          <h3 style="color: var(--accent-purple); margin-top: 0;">Frontend</h3>
-          <ul style="margin-left: 0; list-style: none;">
-            <li><strong>React Native with Expo</strong> - Cross-platform mobile development</li>
-            <li><strong>Zustand</strong> - Lightweight state management solution</li>
-            <li><strong>React Navigation</strong> - Role-based routing and navigation flows</li>
-            <li><strong>TypeScript</strong> - Type-safe development environment</li>
-          </ul>
-        </div>
-        
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 12px;">
-          <h3 style="color: var(--accent-pink); margin-top: 0;">DevOps & Tools</h3>
-          <ul style="margin-left: 0; list-style: none;">
-            <li><strong>Git</strong> - Version control with feature branch workflows</li>
-            <li><strong>Docker Compose</strong> - Local development environment management</li>
-            <li><strong>Database Migrations</strong> - Version-controlled schema evolution</li>
-            <li><strong>API Documentation</strong> - Comprehensive endpoint documentation</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2>🚀 Key Learnings</h2>
-
-      <h3>Technical Insights</h3>
-      <ul>
-        <li><strong>Clean Architecture pays dividends</strong> - The repository pattern and clear separation of concerns made the codebase incredibly maintainable</li>
-        <li><strong>Mobile-first API design</strong> - Designing APIs with mobile constraints in mind led to better performance across all platforms</li>
-        <li><strong>Role-based complexity requires careful planning</strong> - Early investment in flexible permission systems prevented major refactoring later</li>
-      </ul>
-
-      <h3>Project Management</h3>
-      <ul>
-        <li><strong>Stakeholder communication is crucial</strong> - Regular demos and feedback sessions prevented scope creep and ensured user adoption</li>
-        <li><strong>Incremental delivery approach</strong> - Releasing features in phases allowed for real-world testing and rapid iteration</li>
-      </ul>
-
-      <h2>💭 What I'd Do Differently</h2>
-      <p>Looking back, I would:</p>
-      <ul>
-        <li><strong>Implement API versioning from day one</strong> to support future mobile app updates</li>
-        <li><strong>Add comprehensive integration testing</strong> earlier in the development cycle</li>
-        <li><strong>Include more detailed analytics</strong> for institutional decision-making</li>
       </ul>
 
       <div style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; text-align: center;">
