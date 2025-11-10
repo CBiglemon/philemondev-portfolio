@@ -21,32 +21,41 @@
     ></script>
   </head>
   <body>
-    <div class="cursor" id="cursor"></div>
+    <div class="cursor" id="cursor" aria-hidden="true"></div>
 
     <!-- Theme Switcher -->
-    <div class="theme-switcher">
-      <div
+    <div class="theme-switcher" role="group" aria-label="Theme selection">
+      <button
+        type="button"
         class="theme-option active"
         data-theme="deep-space"
         title="Deep Space"
-      ></div>
-      <div
+        aria-pressed="true"
+        aria-label="Activate Deep Space theme"
+      ></button>
+      <button
+        type="button"
         class="theme-option"
         data-theme="nebula-storm"
         title="Nebula Storm"
-      ></div>
-      <div
+        aria-pressed="false"
+        aria-label="Activate Nebula Storm theme"
+      ></button>
+      <button
+        type="button"
         class="theme-option"
         data-theme="solar-flare"
         title="Solar Flare"
-      ></div>
+        aria-pressed="false"
+        aria-label="Activate Solar Flare theme"
+      ></button>
     </div>
 
     <!-- Enhanced Constellation Background -->
-    <div class="constellation-bg" id="constellation-bg"></div>
+    <div class="constellation-bg" id="constellation-bg" aria-hidden="true"></div>
 
     <!-- Floating cosmic elements -->
-    <div class="cosmic-bg" id="cosmic-bg"></div>
+    <div class="cosmic-bg" id="cosmic-bg" aria-hidden="true"></div>
 
     <div class="container">
       <nav id="navbar">
@@ -63,6 +72,7 @@
               class="nav-social-link"
               title="GitHub"
               target="_blank"
+              aria-label="GitHub profile"
             >
               <svg
                 width="16"
@@ -80,6 +90,7 @@
               class="nav-social-link"
               title="LinkedIn"
               target="_blank"
+              aria-label="LinkedIn profile"
             >
               <svg
                 width="16"
@@ -96,7 +107,8 @@
         </div>
       </nav>
 
-      <section class="hero">
+      <main id="main-content" tabindex="-1">
+        <section class="hero">
         <div class="hero-content">
           <div class="hero-badge">
             <div class="status-dot"></div>
@@ -418,7 +430,9 @@
             <div class="project-actions">
               <button
                 class="btn btn-primary magnetic-element"
-                onclick="openProjectModal()"
+                type="button"
+                data-modal-open="projectModal"
+                aria-controls="projectModal"
               >
                 View Case Study
                 <span>→</span>
@@ -429,14 +443,28 @@
       </section>
 
       <!-- Project Modal -->
-      <div class="project-modal" id="projectModal">
-        <div class="modal-overlay" onclick="closeProjectModal()"></div>
+      <div
+        class="project-modal"
+        id="projectModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="projectModalTitle"
+        aria-describedby="projectModalDescription"
+      >
+        <div class="modal-overlay" data-modal-close="projectModal"></div>
         <div class="modal-content">
           <div class="modal-header">
-            <h2>Learning Management System - Case Study</h2>
-            <button class="modal-close" onclick="closeProjectModal()">✕</button>
+            <h2 id="projectModalTitle">Learning Management System - Case Study</h2>
+            <button
+              class="modal-close"
+              type="button"
+              data-modal-close="projectModal"
+              aria-label="Close case study modal"
+            >
+              ✕
+            </button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body" id="projectModalDescription">
             <div class="case-study-content">
               <!-- Case study content will be loaded here -->
               <div class="loading">Loading case study...</div>
@@ -500,9 +528,15 @@
             Send Message
           </button>
 
-          <div class="form-message" id="formMessage"></div>
+          <div
+            class="form-message"
+            id="formMessage"
+            role="status"
+            aria-live="polite"
+          ></div>
         </form>
       </section>
+      </main>
     </div>
 
     <script src="script.js"></script>

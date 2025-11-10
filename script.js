@@ -13,12 +13,49 @@ function closeProjectModal() {
   }
 }
 
+const supportsMatchMedia =
+  typeof window !== "undefined" && typeof window.matchMedia === "function";
+
+const motionPreferenceQuery = supportsMatchMedia
+  ? window.matchMedia("(prefers-reduced-motion: reduce)")
+  : null;
+
+const prefersReducedMotion = () =>
+  motionPreferenceQuery ? motionPreferenceQuery.matches : false;
+
+const subscribeToMotionPreference = (callback) => {
+  if (!motionPreferenceQuery || typeof callback !== "function") {
+    return () => {};
+  }
+
+  const handler = (event) => callback(event.matches, event);
+
+  if (typeof motionPreferenceQuery.addEventListener === "function") {
+    motionPreferenceQuery.addEventListener("change", handler);
+    return () =>
+      motionPreferenceQuery.removeEventListener("change", handler);
+  }
+
+  if (typeof motionPreferenceQuery.addListener === "function") {
+    motionPreferenceQuery.addListener(handler);
+    return () => motionPreferenceQuery.removeListener(handler);
+  }
+
+  return () => {};
+};
+
 // Enhanced Theme Animation System
 class ThemeAnimationManager {
   constructor() {
     this.isTransitioning = false;
     this.mouseX = 50;
     this.mouseY = 50;
+    this.prefersReducedMotion = prefersReducedMotion();
+    this.motionPreferenceCleanup = subscribeToMotionPreference(
+      (matches) => {
+        this.prefersReducedMotion = matches;
+      }
+    );
     this.init();
   }
 
@@ -29,6 +66,8 @@ class ThemeAnimationManager {
 
   // Track mouse position for ripple effect origin
   setupMouseTracking() {
+    if (this.prefersReducedMotion) return;
+
     document.addEventListener("mousemove", (e) => {
       this.mouseX = (e.clientX / window.innerWidth) * 100;
       this.mouseY = (e.clientY / window.innerHeight) * 100;
@@ -70,6 +109,13 @@ class ThemeAnimationManager {
   // Main theme change animation
   async animateThemeChange(clickedOption, theme) {
     this.isTransitioning = true;
+
+    if (this.prefersReducedMotion) {
+      this.setTheme(theme);
+      this.updateActiveThemeOption(clickedOption);
+      this.cleanupTransition(clickedOption);
+      return;
+    }
 
     // Start transition effects
     document.body.classList.add("theme-transitioning");
@@ -141,6 +187,8 @@ class ThemeAnimationManager {
 
   // Animate buttons with shine effect
   animateButtons() {
+    if (this.prefersReducedMotion) return;
+
     const buttons = document.querySelectorAll(".btn-primary");
     buttons.forEach((btn, index) => {
       setTimeout(() => {
@@ -157,14 +205,14 @@ class ThemeAnimationManager {
     const html = document.documentElement;
     const themeOptions = document.querySelectorAll(".theme-option");
 
-    // Remove active class from all options
-    themeOptions.forEach((option) => option.classList.remove("active"));
-
-    // Add active class to selected theme
-    const activeOption = document.querySelector(`[data-theme="${themeName}"]`);
-    if (activeOption) {
-      activeOption.classList.add("active");
-    }
+    themeOptions.forEach((option) => {
+      const isActive = option.dataset.theme === themeName;
+      option.classList.toggle("active", isActive);
+      option.setAttribute("aria-pressed", isActive ? "true" : "false");
+      if (!isActive) {
+        option.style.transform = "scale(1)";
+      }
+    });
 
     // Set theme attribute on html element
     html.setAttribute("data-theme", themeName);
@@ -179,15 +227,19 @@ class ThemeAnimationManager {
 
     // Remove active from all with fade effect
     themeOptions.forEach((option) => {
+      const isActive = option === clickedOption;
       if (option !== clickedOption) {
         option.classList.remove("active");
         option.style.transform = "scale(1)";
       }
+      option.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
 
     // Add active to clicked option
-    clickedOption.classList.add("active");
-    clickedOption.style.transform = "scale(1.05)";
+    if (clickedOption) {
+      clickedOption.classList.add("active");
+      clickedOption.style.transform = "scale(1.05)";
+    }
   }
 
   // Cleanup after transition
@@ -221,6 +273,7 @@ class PortfolioApp {
     this.contactForm = document.getElementById("contactForm");
     this.submitBtn = document.getElementById("submitBtn");
     this.formMessage = document.getElementById("formMessage");
+    this.activeModalTrigger = null;
 
     // Performance optimizations
     this.mouseX = 0;
@@ -232,6 +285,11 @@ class PortfolioApp {
     this.rafId = null;
     this.cachedSections = null;
     this.cachedNavLinks = null;
+
+    this.prefersReducedMotion = prefersReducedMotion();
+    subscribeToMotionPreference((matches) => {
+      this.prefersReducedMotion = matches;
+    });
 
     // Theme animation manager
     this.themeManager = new ThemeAnimationManager();
@@ -294,6 +352,8 @@ class PortfolioApp {
   }
 
   regenerateConstellationBackground() {
+    if (this.prefersReducedMotion) return;
+
     const constellationContainer = document.getElementById("constellation-bg");
     const cosmicContainer = document.getElementById("cosmic-bg");
 
@@ -329,6 +389,8 @@ class PortfolioApp {
 
   // Create enhanced constellation background elements
   createConstellationBackground() {
+    if (this.prefersReducedMotion) return;
+
     const container = document.getElementById("constellation-bg");
     if (!container) return;
 
@@ -410,6 +472,8 @@ class PortfolioApp {
 
   // Create cosmic background with trails and enhanced effects
   createCosmicBackground() {
+    if (this.prefersReducedMotion) return;
+
     const container = document.getElementById("cosmic-bg");
     if (!container) return;
 
@@ -456,6 +520,10 @@ class PortfolioApp {
 
   setupCursor() {
     if (!this.cursor) return;
+    if (this.prefersReducedMotion) {
+      this.cursor.hidden = true;
+      return;
+    }
 
     document.addEventListener("mousemove", this.throttledMouseHandler, {
       passive: true,
@@ -487,6 +555,8 @@ class PortfolioApp {
   // ==========================================
 
   setupMagneticEffects() {
+    if (this.prefersReducedMotion) return;
+
     this.magneticElements.forEach((element) => {
       element.addEventListener(
         "mouseenter",
@@ -810,8 +880,21 @@ class PortfolioApp {
     };
 
     try {
-      // Simulate form submission since no backend endpoint
-      await this.simulateFormSubmission(data);
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || !result?.success) {
+        throw new Error(
+          result?.error || "Unable to send your message right now."
+        );
+      }
 
       requestAnimationFrame(() => {
         this.showMessage(
@@ -835,26 +918,14 @@ class PortfolioApp {
 
       requestAnimationFrame(() => {
         this.showMessage(
-          "Oops! Something went wrong. Please try again or reach out directly via email.",
+          error.message ||
+            "Oops! Something went wrong. Please try again or reach out directly via email.",
           "error"
         );
         this.submitBtn.classList.remove("loading");
         this.submitBtn.textContent = "Send Message";
       });
     }
-  }
-
-  simulateFormSubmission(data) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (Math.random() > 0.1) {
-          console.log("Form submitted:", data);
-          resolve();
-        } else {
-          reject(new Error("Submission failed"));
-        }
-      }, 1500);
-    });
   }
 
   showMessage(text, type) {
@@ -1062,6 +1133,25 @@ class PortfolioApp {
   // ==========================================
 
   setupProjectModal() {
+    const modal = document.getElementById("projectModal");
+    if (!modal) return;
+
+    const openTriggers = document.querySelectorAll("[data-modal-open]");
+    openTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        const targetId = trigger.getAttribute("data-modal-open") || "projectModal";
+        this.openProjectModal(targetId, trigger);
+      });
+    });
+
+    const closeTriggers = document.querySelectorAll("[data-modal-close]");
+    closeTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        const targetId = trigger.getAttribute("data-modal-close") || "projectModal";
+        this.closeProjectModal(targetId);
+      });
+    });
+
     // Close modal on escape key
     document.addEventListener(
       "keydown",
@@ -1074,25 +1164,43 @@ class PortfolioApp {
     );
   }
 
-  openProjectModal() {
-    const modal = document.getElementById("projectModal");
+  openProjectModal(modalId = "projectModal", triggerElement = null) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
     const modalContent = modal.querySelector(".case-study-content");
 
     // Show modal
     modal.classList.add("active");
     document.body.style.overflow = "hidden";
+    this.activeModalTrigger = triggerElement || document.activeElement;
+
+    const closeButton = modal.querySelector(".modal-close");
+    if (closeButton) {
+      closeButton.focus();
+    }
 
     // Load case study content
-    this.loadCaseStudyContent(modalContent);
+    if (modalContent) {
+      this.loadCaseStudyContent(modalContent);
+    }
   }
 
-  closeProjectModal() {
-    const modal = document.getElementById("projectModal");
+  closeProjectModal(modalId = "projectModal") {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
     modal.classList.remove("active");
     document.body.style.overflow = "";
+
+    if (this.activeModalTrigger && typeof this.activeModalTrigger.focus === "function") {
+      this.activeModalTrigger.focus();
+    }
+    this.activeModalTrigger = null;
   }
 
   loadCaseStudyContent(container) {
+    if (!container) return;
+
     // Case study content
     const caseStudyHTML = `
       <h1>Learning Management System Development</h1>
